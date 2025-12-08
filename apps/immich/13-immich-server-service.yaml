@@ -6,11 +6,10 @@ metadata:
   labels:
     app: immich-server
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: immich-server
   ports:
     - port: 2283
-      nodePort: 30283
       targetPort: 2283
       protocol: TCP
