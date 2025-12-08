@@ -11,7 +11,7 @@ spec:
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: /tmp/immich-library-data
+    path: /mnt/homelab/immich-library-data
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1

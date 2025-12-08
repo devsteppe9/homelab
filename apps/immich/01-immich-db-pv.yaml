@@ -11,7 +11,7 @@ spec:
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: /tmp/immich-db-data
+    path: /mnt/homelab/immich-db-data
   persistentVolumeReclaimPolicy: Retain
 ---
 kind: PersistentVolumeClaim

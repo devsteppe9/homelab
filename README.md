@@ -136,7 +136,6 @@ kubectl describe svc -n <namespace> <service-name>
 
 1. **Change default passwords** in application ConfigMaps
 2. **Use Kubernetes Secrets** instead of ConfigMaps for sensitive data
-3. **Update storage paths** from `/tmp/` to secure persistent directories
 4. **Add resource limits** to prevent resource exhaustion
 5. **Configure SSL/TLS** for external-facing services
 6. **Review network policies** to restrict inter-pod communication
@@ -146,7 +145,6 @@ kubectl describe svc -n <namespace> <service-name>
 Current storage configuration uses hostPath volumes.
 
 **Recommendations:**
-- Move from `/tmp/` to persistent directories (e.g., `/mnt/homelab/`)
 - Consider NFS or other network storage for multi-node clusters
 - Implement regular backup procedures
 - Monitor disk usage regularly
