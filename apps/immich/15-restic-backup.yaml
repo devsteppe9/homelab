@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restic-config
+  namespace: immich-restic-backup
+data:
+  RESTIC_REPOSITORY: "s3:s3.us-east-1.amazonaws.com/r620-immich-cold-backup"
+  RESTIC_PASSWORD: "CHANGE_ME"
+
+---
+# --- INIT REPOSITORY (run one time only) ---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: restic-init
+  namespace: immich-restic-backup
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: restic-init
+        image: restic/restic:0.18.1
+        envFrom:
+        - configMapRef:
+            name: restic-config
+        - secretRef:
+            name: aws-creds
+        volumeMounts:
+        - name: immich-data
+          mountPath: /data
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Initializing restic repository..."
+          restic -r ${RESTIC_REPOSITORY} init || echo "Repository already exists."
+          restic -r ${RESTIC_REPOSITORY} --verbose=2 backup -o s3.storage-class=GLACIER /data --skip-if-unchanged
+      
+      volumes:
+      - name: immich-data
+        hostPath:
+          path: /mnt/homelab/immich-library-data/library
+          type: Directory
+---
+# --- BACKUP CRONJOB ---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restic-backup-cron
+  namespace: immich-restic-backup
+spec:
+  schedule: "0 3 * * *"  # every day at 3am
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: restic-backup
+            image: restic/restic:0.18.1
+            envFrom:
+            - configMapRef:
+                name: restic-config
+            - secretRef:
+                name: aws-creds
+            volumeMounts:
+            - name: immich-data
+              mountPath: /data
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Running backup…"
+              restic -r ${RESTIC_REPOSITORY} --verbose=2 backup -o s3.storage-class=GLACIER /data --skip-if-unchanged
+              restic forget --keep-monthly 1 --prune
+
+          volumes:
+          - name: immich-data
+            hostPath:
+              path: /mnt/homelab/immich-library-data/library
+              type: Directory
