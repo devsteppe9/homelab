@@ -21,6 +21,12 @@ spec:
       containers:
       - name: restic-init
         image: restic/restic:0.18.1
+        
+        env:
+        - name: GOMAXPROCS
+          value: "32"
+        - name: RESTIC_PACK_SIZE
+          value: "134217728"  # 128MB
         envFrom:
         - configMapRef:
             name: restic-config
@@ -35,7 +41,7 @@ spec:
         - |
           echo "Initializing restic repository..."
           restic -r ${RESTIC_REPOSITORY} init || echo "Repository already exists."
-          restic -r ${RESTIC_REPOSITORY} --verbose=2 backup -o s3.storage-class=GLACIER /data --exclude "/data/thumbs" --exclude "/data/encoded-video" --skip-if-unchanged
+          restic -r ${RESTIC_REPOSITORY} --verbose=2 backup -o s3.storage-class=GLACIER -o s3.connections=16 /data --exclude "/data/thumbs" --exclude "/data/encoded-video" --skip-if-unchanged
       
       volumes:
       - name: immich-data
