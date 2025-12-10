@@ -43,7 +43,7 @@ spec:
         - |
           echo "Initializing restic repository..."
           restic -r ${RESTIC_REPOSITORY} init || echo "Repository already exists."
-          restic -r ${RESTIC_REPOSITORY} --verbose --progress backup -o s3.storage-class=GLACIER -o s3.connections=16 /data --compression off --exclude "/data/thumbs" --exclude "/data/encoded-video" --skip-if-unchanged
+          restic -r ${RESTIC_REPOSITORY} --verbose backup -o s3.storage-class=GLACIER -o s3.connections=16 /data --compression off --exclude "/data/thumbs" --exclude "/data/encoded-video" --skip-if-unchanged
       
       volumes:
       - name: immich-data
