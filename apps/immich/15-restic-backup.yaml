@@ -26,7 +26,7 @@ spec:
         - name: GOMAXPROCS
           value: "32"
         - name: RESTIC_PACK_SIZE
-          value: "67108864"  # 64MB
+          value: "128"  # 128MB
         envFrom:
         - configMapRef:
             name: restic-config
