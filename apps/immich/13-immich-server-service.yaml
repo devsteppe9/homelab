@@ -13,3 +13,22 @@ spec:
     - port: 2283
       targetPort: 2283
       protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich-ingress
+  namespace: immich
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: immich.home.lan
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: immich-server
+            port:
+              number: 2283
