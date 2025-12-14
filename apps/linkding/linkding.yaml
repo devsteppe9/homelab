@@ -50,10 +50,10 @@ spec:
   ingressClassName: traefik
   # tls:
   # - hosts:
-  #   - linkding.homelab.net
+  #   - linkding.home.lan
   #   secretName: linkding-tls
   rules:
-  - host: linkding.homelab.net
+  - host: linkding.home.lan
     http:
       paths:
       - path: /
