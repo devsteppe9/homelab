@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nzbget
+  namespace: arr-stack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nzbget
+  template:
+    metadata:
+      labels:
+        app: nzbget
+    spec:
+      containers:
+        - name: nzbget
+          image: ghcr.io/hotio/nzbget
+          ports:
+            - containerPort: 6789
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: UMASK
+              value: "002"
+            - name: TZ
+              value: "America/Chicago"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              subPath: nzbget
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: arr-config-pvc
+        - name: data
+          persistentVolumeClaim:
+            claimName: arr-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nzbget
+  namespace: arr-stack
+spec:
+  selector:
+    app: nzbget
+  ports:
+    - name: http
+      port: 6789
+      targetPort: 6789
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nzbget
+  namespace: arr-stack
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`nzbget.home.lan`)
+      kind: Rule
+      services:
+        - name: nzbget
+          port: 6789

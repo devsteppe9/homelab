@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jackett
+  namespace: arr-stack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jackett
+  template:
+    metadata:
+      labels:
+        app: jackett
+    spec:
+      containers:
+        - name: jackett
+          image: ghcr.io/hotio/jackett
+          ports:
+            - containerPort: 9117
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: UMASK
+              value: "002"
+            - name: TZ
+              value: "America/Chicago"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              subPath: jackett
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: arr-config-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jackett
+  namespace: arr-stack
+spec:
+  selector:
+    app: jackett
+  ports:
+    - name: http
+      port: 9117
+      targetPort: 9117
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jackett
+  namespace: arr-stack
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`jackett.home.lan`)
+      kind: Rule
+      services:
+        - name: jackett
+          port: 9117

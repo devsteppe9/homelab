@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex
+  namespace: arr-stack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      containers:
+        - name: plex
+          image: lscr.io/linuxserver/plex:latest
+          ports:
+            - containerPort: 32400
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: UMASK
+              value: "002"
+            - name: TZ
+              value: "America/Chicago"
+            - name: VERSION
+              value: "docker"
+          volumeMounts:
+            - name: data
+              mountPath: /data/media
+              subPath: media
+            - name: config
+              mountPath: /config
+              subPath: plex
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: arr-config-pvc
+        - name: data
+          persistentVolumeClaim:
+            claimName: arr-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex
+  namespace: arr-stack
+spec:
+  selector:
+    app: plex
+  ports:
+    - name: http
+      port: 32400
+      targetPort: 32400
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: plex
+  namespace: arr-stack
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`plex.home.lan`)
+      kind: Rule
+      services:
+        - name: plex
+          port: 32400
